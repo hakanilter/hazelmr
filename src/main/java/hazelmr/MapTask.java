@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.MultiMap;
@@ -13,9 +14,10 @@ public class MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> implements Callable<Void>
 {
 	private static final long serialVersionUID = 9107135773832469237L;
 	
-	private Class<? extends Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>> mapper;	
+	private Class<? extends Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>> mapper;
+
 	private Map<KEYIN, VALUEIN> data;
-	private MultiMap<KEYOUT, Container<VALUEOUT>> tempData;	
+    private MultiMap<KEYOUT, Container<VALUEOUT>> tempData;
 	
 	public MapTask() {
 		
@@ -33,24 +35,35 @@ public class MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> implements Callable<Void>
 	private void process() throws InstantiationException, IllegalAccessException
 	{
 		// get local keys
-		Set<KEYIN> keys = ((IMap<KEYIN, VALUEIN>) data).localKeySet();
-		
-		// iterate values and give them to mapper
-		for (KEYIN key : keys) {			
-			VALUEIN value = data.get(key);
-			// create mapper
-			Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> instance = mapper.newInstance();
-			instance.map(key, value);			
-			Map<KEYOUT, Collection<VALUEOUT>> result = instance.getResults();			
-			// combine results
-			for (Map.Entry<KEYOUT, Collection<VALUEOUT>> entry : result.entrySet()) {						
-				for (VALUEOUT mapValue : entry.getValue()) {
-                    // use container for individual results
-					tempData.put(entry.getKey(), new Container<VALUEOUT>(mapValue));	
-				}								
-			}		
-		}
+        IMap<KEYIN, VALUEIN> localMap = ((IMap<KEYIN, VALUEIN>) data);
+        try {
+            localMap.lockMap(60, TimeUnit.SECONDS);
+            executeMap(localMap);
+        } finally {
+            localMap.unlockMap();
+        }
 	}
+
+    private void executeMap(IMap<KEYIN, VALUEIN> localMap) throws IllegalAccessException, InstantiationException {
+        // get local keys
+        Set<KEYIN> keys = localMap.localKeySet();
+
+        // iterate values and give them to mapper
+        for (KEYIN key : keys) {
+            VALUEIN value = data.get(key);
+            // create mapper
+            Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> instance = mapper.newInstance();
+            instance.map(key, value);
+            Map<KEYOUT, Collection<VALUEOUT>> result = instance.getResults();
+            // combine results
+            for (Map.Entry<KEYOUT, Collection<VALUEOUT>> entry : result.entrySet()) {
+                for (VALUEOUT mapValue : entry.getValue()) {
+                    // use container for individual results
+                    tempData.put(entry.getKey(), new Container<VALUEOUT>(mapValue));
+                }
+            }
+        }
+    }
 	
 	// getter setter
 	
