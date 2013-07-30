@@ -45,6 +45,7 @@ public class MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> implements Callable<Void>
 			// combine results
 			for (Map.Entry<KEYOUT, Collection<VALUEOUT>> entry : result.entrySet()) {						
 				for (VALUEOUT mapValue : entry.getValue()) {
+                    // use container for individual results
 					tempData.put(entry.getKey(), new Container<VALUEOUT>(mapValue));	
 				}								
 			}		

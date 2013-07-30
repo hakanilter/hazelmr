@@ -17,6 +17,7 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
 	private Class<? extends Reducer<KEYMID, VALUEMID, KEYOUT, VALUEOUT>> reducer;
 	private Class<? extends Serializable> outputType;
 	private Map<KEYIN, VALUEIN> data;
+    private long timeout = 60;
 	
 	public HazelcastMapReduceJob() {
 		
@@ -37,7 +38,7 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
 		MultiTask<Void> distributedTask = new MultiTask<Void>(mapTask, hazelcast.getCluster().getMembers());			    
 		ExecutorService executorService = hazelcast.getExecutorService();	    
 	    executorService.execute(distributedTask);
-	    distributedTask.get(60, TimeUnit.SECONDS);
+	    distributedTask.get(timeout, TimeUnit.SECONDS);
 	   
 	    // create reduce task
 	    Map<KEYOUT, VALUEOUT> result = new HashMap<KEYOUT, VALUEOUT>(); 
@@ -72,6 +73,10 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
 		return data;
 	}
 
+    public long getTimeout() {
+        return timeout;
+    }
+
 	public HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VALUEOUT> setMapper(
 			Class<? extends Mapper<KEYIN, VALUEIN, KEYMID, VALUEMID>> mapper) 
 	{
@@ -99,4 +104,10 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
 		this.data = data;
 		return this;
 	}
+
+    public HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VALUEOUT> setTimeout(long timeout)
+    {
+        this.timeout = timeout;
+        return this;
+    }
 }
