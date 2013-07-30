@@ -6,7 +6,7 @@
 	<artifactId>hazelmr</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	<name>Map Reduce helper for Hazelcast 2.x</name>
+	<name>Map Reduce support for Hazelcast 2.x</name>
 	<description />	
 
 	<properties>
