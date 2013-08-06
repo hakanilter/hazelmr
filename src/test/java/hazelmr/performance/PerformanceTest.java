@@ -74,7 +74,7 @@ public class PerformanceTest
         testGetPerformance(map);
     }
 
-    // iterates over all map
+    // iterates over all map items
     private void testGetPerformance(Map<Integer, String> map)
     {
         String testId = loadTestData(map);
