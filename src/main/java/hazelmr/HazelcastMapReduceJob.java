@@ -1,6 +1,5 @@
 package hazelmr;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -9,11 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.MultiMap;
-import com.hazelcast.core.MultiTask;
+import com.hazelcast.core.*;
 
 public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VALUEOUT>
 {
@@ -26,21 +21,35 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
     private boolean autoDestroy = true;
     private long timeout = 60;
 
+    private String jobId;
     private ExecutorService executorService;
     private Set<Member> members;
     private MultiMap<KEYMID, Container<VALUEMID>> tempData;
+    private Map<Object, Object> parameters;
 	
 	public HazelcastMapReduceJob() {
-		
+        parameters = new HashMap<Object, Object>();
 	}
 
 	public Map<KEYOUT, VALUEOUT> execute(HazelcastInstance hazelcast) throws Exception
-	{
-        this.executorService = hazelcast.getExecutorService();
-        this.members = hazelcast.getCluster().getMembers();
-        this.tempData = hazelcast.getMultiMap(UUID.randomUUID().toString());
+    {
+        initialize(hazelcast);
         return executeMapReduce();
 	}
+
+    public void destroy()
+    {
+        logger.fine("destroying temporary data...");
+        tempData.destroy();
+    }
+
+    private void initialize(HazelcastInstance hazelcast)
+    {
+        jobId = UUID.randomUUID().toString();
+        executorService = hazelcast.getExecutorService();
+        members = hazelcast.getCluster().getMembers();
+        tempData = hazelcast.getMultiMap("hazelmr-tempData-" + jobId);
+    }
 
     private Map<KEYOUT, VALUEOUT> executeMapReduce() throws Exception
     {
@@ -53,8 +62,7 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
         } finally {
             // clear temp data
             if (autoDestroy) {
-                logger.fine("destroying temporary map...");
-                tempData.destroy();
+                destroy();
             }
         }
 
@@ -71,7 +79,8 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
                 new MapTask<KEYIN, VALUEIN, KEYMID, VALUEMID>()
                 .setMapper(mapper)
                 .setData(data)
-                .setTempData(tempData);
+                .setTempData(tempData)
+                .setParameters(parameters);
 
         // execute map task
         MultiTask<Void> distributedTask = new MultiTask<Void>(mapTask, members);
@@ -91,13 +100,22 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
                 new ReduceTask<KEYMID, VALUEMID, KEYOUT, VALUEOUT>()
                 .setReducer(reducer)
                 .setData(tempData)
-                .setTempData(result);
+                .setTempData(result)
+                .setParameters(parameters);
         // execute reduce task
         reduceTask.call();
         return result;
     }
 
 	// getter setter
+
+    public String getJobId() {
+        return jobId;
+    }
+
+    public Object getParameter(String key) {
+        return parameters.get(key);
+    }
 	
 	public Class<? extends Mapper<KEYIN, VALUEIN, KEYMID, VALUEMID>> getMapper() {
 		return mapper;
@@ -117,6 +135,12 @@ public class HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VAL
 
     public boolean isAutoDestroy() {
         return autoDestroy;
+    }
+
+    public HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VALUEOUT> setParameter(String key, Object value)
+    {
+        parameters.put(key, value);
+        return this;
     }
 
 	public HazelcastMapReduceJob<KEYIN, VALUEIN, KEYMID, VALUEMID, KEYOUT, VALUEOUT> setMapper(

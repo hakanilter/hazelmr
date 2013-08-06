@@ -1,5 +1,7 @@
 package hazelmr;
 
+import static java.util.Map.Entry;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
@@ -9,13 +11,14 @@ import java.util.concurrent.TimeUnit;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.MultiMap;
+import com.hazelcast.impl.MProxyImpl;
 
 public class MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> implements Callable<Void>, Serializable 
 {
 	private static final long serialVersionUID = 9107135773832469237L;
 	
 	private Class<? extends Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>> mapper;
-
+    private Map<Object, Object> parameters;
 	private Map<KEYIN, VALUEIN> data;
     private MultiMap<KEYOUT, Container<VALUEOUT>> tempData;
 	
@@ -31,28 +34,18 @@ public class MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> implements Callable<Void>
 		}
 		return null;
 	}
-	
-	private void process() throws InstantiationException, IllegalAccessException
-	{
-		// get local keys
-        IMap<KEYIN, VALUEIN> localMap = ((IMap<KEYIN, VALUEIN>) data);
-        try {
-            localMap.lockMap(60, TimeUnit.SECONDS);
-            executeMap(localMap);
-        } finally {
-            localMap.unlockMap();
-        }
-	}
 
-    private void executeMap(IMap<KEYIN, VALUEIN> localMap) throws IllegalAccessException, InstantiationException {
+    private void process() throws IllegalAccessException, InstantiationException
+    {
         // get local keys
-        Set<KEYIN> keys = localMap.localKeySet();
+        Set<KEYIN> keys = ((IMap<KEYIN, VALUEIN>) data).localKeySet();
 
         // iterate values and give them to mapper
         for (KEYIN key : keys) {
             VALUEIN value = data.get(key);
             // create mapper
             Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> instance = mapper.newInstance();
+            instance.setParameters(parameters);
             instance.map(key, value);
             Map<KEYOUT, Collection<VALUEOUT>> result = instance.getResults();
             // combine results
@@ -78,6 +71,10 @@ public class MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> implements Callable<Void>
 	public MultiMap<KEYOUT, Container<VALUEOUT>> getTempData() {
 		return tempData;
 	}
+
+    public Map<Object, Object> getParameters() {
+        return parameters;
+    }
 	
 	public MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> setMapper(Class<? extends Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>> mapper) 
 	{
@@ -96,4 +93,10 @@ public class MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> implements Callable<Void>
 		this.tempData = tempData;
 		return this;
 	}
+
+    public MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> setParameters(Map<Object, Object> parameters)
+    {
+        this.parameters = parameters;
+        return this;
+    }
 }

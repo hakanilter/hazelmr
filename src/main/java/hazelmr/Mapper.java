@@ -6,7 +6,8 @@ import java.util.Map;
 import java.util.Vector;
 
 public abstract class Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> 
-{	
+{
+    private Map<Object, Object> parameters;
 	private Map<KEYOUT, Collection<VALUEOUT>> result;
 	
 	public Mapper() {
@@ -26,4 +27,16 @@ public abstract class Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>
 	public final Map<KEYOUT, Collection<VALUEOUT>> getResults() {
 		return result;
 	}
+
+    public Object getParameter(String key) {
+        return parameters.get(key);
+    }
+
+    public Map<Object, Object> getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(Map<Object, Object> parameters) {
+        this.parameters = parameters;
+    }
 }

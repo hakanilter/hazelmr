@@ -10,6 +10,7 @@ import com.hazelcast.core.MultiMap;
 public class ReduceTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT>  
 {
 	private Class<? extends Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>> reducer;
+    private Map<Object, Object> parameters;
 	private MultiMap<KEYIN, Container<VALUEIN>> data;
 	private Map<KEYOUT, VALUEOUT> tempData;
 	
@@ -24,6 +25,7 @@ public class ReduceTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT>
 			Collection<VALUEIN> values = toCollection(data.get(key));
 			// create reducer
 			Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> instance = reducer.newInstance();
+            instance.setParameters(parameters);
 			instance.reduce(key, values);
 			Map<KEYOUT, VALUEOUT> result = instance.getResults();			
 			if (result != null) {
@@ -57,6 +59,10 @@ public class ReduceTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT>
 	public Map<KEYOUT, VALUEOUT> getTempData() {
 		return tempData;
 	}
+
+    public Map<Object, Object> getParameters() {
+        return parameters;
+    }
 	
 	public ReduceTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> setReducer(Class<? extends Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>> reducer) 
 	{
@@ -75,4 +81,10 @@ public class ReduceTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT>
 		this.tempData = tempData;
 		return this;
 	}
+
+    public ReduceTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> setParameters(Map<Object, Object> parameters)
+    {
+        this.parameters = parameters;
+        return this;
+    }
 }
