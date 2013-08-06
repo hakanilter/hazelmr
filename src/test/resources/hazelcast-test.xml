@@ -177,7 +177,7 @@
         <merge-policy>hz.ADD_NEW_ENTRY</merge-policy>
     </map>
     
-   <map name="imageDigestMap">
+   <map name="testMap">
         <backup-count>1</backup-count>
         <async-backup-count>0</async-backup-count>
         <time-to-live-seconds>0</time-to-live-seconds>
