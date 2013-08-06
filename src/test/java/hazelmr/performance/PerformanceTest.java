@@ -23,7 +23,7 @@ public class PerformanceTest
     private static final int TEST_COUNT = 1000000;
 
     @Test
-    public void testWithHazelcast() throws Exception
+    public void testWithMapReduce() throws Exception
     {
         Config config = new ClasspathXmlConfig("hazelcast-test.xml");
 
@@ -35,22 +35,11 @@ public class PerformanceTest
         HazelcastInstance client = Hazelcast.newHazelcastInstance(config);
 
         // create data
-        long t1, t2;
-        System.out.println("creating test data...");
-        t1 = System.currentTimeMillis();
         Map<Integer, String> map = client.getMap("testMap");
-        for (int i = 0; i < TEST_COUNT; i++) {
-            if (i % 1000 == 0) {
-                System.out.println(i);
-            }
-            map.put(i, UUID.randomUUID().toString());
-        }
-        String testId = UUID.randomUUID().toString();
-        map.put(666, testId);
-        t2 = System.currentTimeMillis();
-        System.out.println("test data ready (" + (t2-t1) + " ms)");
+        String testId = loadTestData(map);
 
         // create job
+        long t1, t2;
         t1 = System.currentTimeMillis();
         HazelcastMapReduceJob<Integer, String, String, Integer, String, Integer> job =
                 new HazelcastMapReduceJob<Integer, String, String, Integer, String, Integer>()
@@ -71,10 +60,44 @@ public class PerformanceTest
     @Test
     public void testLocal()
     {
-        long t1, t2;
-        System.out.println("creating test data...");
-        t1 = System.currentTimeMillis();
         Map<Integer, String> map = new HashMap<Integer, String>(TEST_COUNT);
+        testGetPerformance(map);
+    }
+
+    @Test
+    public void testDistributed()
+    {
+        Config config = new ClasspathXmlConfig("hazelcast-test.xml");
+        HazelcastInstance client = Hazelcast.newHazelcastInstance(config);
+
+        IMap<Integer, String> map = client.getMap("testMap");
+        testGetPerformance(map);
+    }
+
+    // iterates over all map
+    private void testGetPerformance(Map<Integer, String> map)
+    {
+        String testId = loadTestData(map);
+
+        long t1, t2;
+        System.out.println("starting test...");
+        t1 = System.currentTimeMillis();
+        for (Integer key : map.keySet()) {
+            String value = map.get(key);
+            if (value.equals(testId)) {
+                System.out.println("match: " + value);
+            }
+        }
+        t2 = System.currentTimeMillis();
+        System.out.println("test done (" + (t2-t1) + " ms)");
+    }
+
+    // creates test data for given map
+    private String loadTestData(Map<Integer, String> map)
+    {
+        long t1, t2;
+        t1 = System.currentTimeMillis();
+        System.out.println("creating test data...");
         for (int i = 0; i < TEST_COUNT; i++) {
             if (i % 1000 == 0) {
                 System.out.println(i);
@@ -86,14 +109,6 @@ public class PerformanceTest
         t2 = System.currentTimeMillis();
         System.out.println("test data ready (" + (t2-t1) + " ms)");
 
-        System.out.println("starting test...");
-        t1 = System.currentTimeMillis();
-        for (Map.Entry<Integer, String> entry : map.entrySet()) {
-            if (entry.getValue().equals(testId)) {
-                System.out.println("match: " + entry.getValue());
-            }
-        }
-        t2 = System.currentTimeMillis();
-        System.out.println("test done (" + (t2-t1) + " ms)");
+        return testId;
     }
 }
