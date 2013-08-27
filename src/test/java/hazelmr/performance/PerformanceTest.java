@@ -2,8 +2,6 @@ package hazelmr.performance;
 
 import com.hazelcast.config.ClasspathXmlConfig;
 import com.hazelcast.config.Config;
-import com.hazelcast.config.MapConfig;
-import com.hazelcast.config.NearCacheConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
@@ -19,7 +17,7 @@ import java.util.*;
  */
 public class PerformanceTest
 {
-    private static final int INSTANCE_COUNT = 0;
+    private static final int INSTANCE_COUNT = 3;
     private static final int TEST_COUNT = 1000000;
 
     @Test

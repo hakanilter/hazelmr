@@ -38,7 +38,8 @@ public class MapTask<KEYIN, VALUEIN, KEYOUT, VALUEOUT> implements Callable<Void>
     private void process() throws IllegalAccessException, InstantiationException
     {
         // get local keys
-        Set<KEYIN> keys = ((IMap<KEYIN, VALUEIN>) data).localKeySet();
+        IMap<KEYIN, VALUEIN> imap = ((IMap<KEYIN, VALUEIN>) data);
+        Set<KEYIN> keys = imap.localKeySet();
 
         // iterate values and give them to mapper
         for (KEYIN key : keys) {

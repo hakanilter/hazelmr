@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.hazelcast.client.ClientConfig;
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.core.IMap;
 import hazelmr.HazelcastMapReduceJob;
 import org.junit.Assert;
 import org.junit.Test;
