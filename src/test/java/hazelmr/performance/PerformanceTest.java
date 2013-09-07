@@ -15,14 +15,13 @@ import java.util.*;
  * Date: 8/5/13
  * Time: 3:58 PM
  */
-public class PerformanceTest
-{
+public class PerformanceTest {
+
     private static final int INSTANCE_COUNT = 3;
     private static final int TEST_COUNT = 1000000;
 
     @Test
-    public void testWithMapReduce() throws Exception
-    {
+    public void testWithMapReduce() throws Exception {
         Config config = new ClasspathXmlConfig("hazelcast-test.xml");
 
         List<HazelcastInstance> instances = new ArrayList<HazelcastInstance>(INSTANCE_COUNT);
@@ -52,19 +51,17 @@ public class PerformanceTest
 
         System.out.println("..and the oscar goes to:");
         System.out.println(result);
-        System.out.println("done (" + (t2-t1) + " ms)");
+        System.out.println("done (" + (t2 - t1) + " ms)");
     }
 
     @Test
-    public void testLocal()
-    {
+    public void testLocal() {
         Map<Integer, String> map = new HashMap<Integer, String>(TEST_COUNT);
         testGetPerformance(map);
     }
 
     @Test
-    public void testDistributed()
-    {
+    public void testDistributed() {
         Config config = new ClasspathXmlConfig("hazelcast-test.xml");
         HazelcastInstance client = Hazelcast.newHazelcastInstance(config);
 
@@ -73,8 +70,7 @@ public class PerformanceTest
     }
 
     // iterates over all map items
-    private void testGetPerformance(Map<Integer, String> map)
-    {
+    private void testGetPerformance(Map<Integer, String> map) {
         String testId = loadTestData(map);
 
         long t1, t2;
@@ -87,12 +83,11 @@ public class PerformanceTest
             }
         }
         t2 = System.currentTimeMillis();
-        System.out.println("test done (" + (t2-t1) + " ms)");
+        System.out.println("test done (" + (t2 - t1) + " ms)");
     }
 
     // creates test data for given map
-    private String loadTestData(Map<Integer, String> map)
-    {
+    private String loadTestData(Map<Integer, String> map) {
         long t1, t2;
         t1 = System.currentTimeMillis();
         System.out.println("creating test data...");
@@ -105,8 +100,9 @@ public class PerformanceTest
         String testId = UUID.randomUUID().toString();
         map.put(666, testId);
         t2 = System.currentTimeMillis();
-        System.out.println("test data ready (" + (t2-t1) + " ms)");
+        System.out.println("test data ready (" + (t2 - t1) + " ms)");
 
         return testId;
     }
+
 }

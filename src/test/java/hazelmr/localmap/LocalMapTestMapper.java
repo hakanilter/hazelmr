@@ -9,11 +9,10 @@ import java.util.Map;
  * Date: 8/5/13
  * Time: 4:01 PM
  */
-public class LocalMapTestMapper extends Mapper<String, Object, String, Integer>
-{
+public class LocalMapTestMapper extends Mapper<String, Object, String, Integer> {
+
     @Override
-    public void map(String key, Object value)
-    {
+    public void map(String key, Object value) {
         String target = (String) getParameter("target");
 
         Map<Integer, String> map = (Map<Integer, String>) value;
@@ -25,4 +24,5 @@ public class LocalMapTestMapper extends Mapper<String, Object, String, Integer>
 
         System.out.println("one mapper done");
     }
+
 }

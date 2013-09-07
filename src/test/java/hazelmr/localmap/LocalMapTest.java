@@ -15,14 +15,13 @@ import java.util.*;
  * Date: 8/5/13
  * Time: 3:58 PM
  */
-public class LocalMapTest
-{
+public class LocalMapTest {
+
     private static final int INSTANCE_COUNT = 3;
     private static final int TEST_COUNT = 1000000 / INSTANCE_COUNT;
 
     @Test
-    public void testWithMapReduce() throws Exception
-    {
+    public void testWithMapReduce() throws Exception {
         Config config = new ClasspathXmlConfig("hazelcast-test.xml");
 
         List<HazelcastInstance> instances = new ArrayList<HazelcastInstance>(INSTANCE_COUNT);
@@ -52,15 +51,14 @@ public class LocalMapTest
 
         System.out.println("..and the oscar goes to:");
         System.out.println(result);
-        System.out.println("done (" + (t2-t1) + " ms)");
+        System.out.println("done (" + (t2 - t1) + " ms)");
 
         Assert.assertNotNull(result.get(testId));
         Assert.assertEquals(INSTANCE_COUNT, result.get(testId).intValue());
     }
 
     // creates test data for given map
-    private String loadTestData(List<HazelcastInstance> instances, Map<String, Object> globalMap)
-    {
+    private String loadTestData(List<HazelcastInstance> instances, Map<String, Object> globalMap) {
         long t1, t2;
         t1 = System.currentTimeMillis();
         System.out.println("creating test data...");
@@ -80,8 +78,9 @@ public class LocalMapTest
         }
 
         t2 = System.currentTimeMillis();
-        System.out.println("test data ready (" + (t2-t1) + " ms)");
+        System.out.println("test data ready (" + (t2 - t1) + " ms)");
 
         return testId;
     }
+
 }
